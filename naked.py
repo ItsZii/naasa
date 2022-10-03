@@ -4,15 +4,28 @@ import datetime #importē datumu
 import time #importē pulksteni
 import yaml
 
+from configparser import ConfigParser
 from datetime import datetime
 print('Asteroid processing service')
 
 #Izprintē, ka tiek ielādēta konfigurācija no faila
 print('Loading configuration from file')
 
-# Tiek izveidotas divas vērtības, lai saīsinātu koda apjomu. 1. ir NASA api atslēga, otrā ir mājaslapas pirmā daļa, kura ņems pretī api atslēgu 
-nasa_api_key = "i3iLGpTXE9yD0UAzSY9qpqDKWbce0Cf6HpWV9UJH"
-nasa_api_url = "https://api.nasa.gov/neo/"
+try:
+	config = ConfigParser()
+	config.read('config.ini')
+
+	nasa_api_key = config.get('nasa', 'api_key')
+	nasa_api_url = config.get('nasa', 'api_url')
+
+	mysql_config_mysql_host = config.get('mysql_config', 'mysql_host')
+	mysql_config_mysql_db = config.get('mysql_config', 'mysql_db')
+	mysql_config_mysql_user = config.get('mysql_config', 'mysql_user')
+	mysql_config_mysql_pass = config.get('mysql_config', 'mysql_pass')
+
+except:
+	logger.exception('')
+print('DONE')
 
 #ievieto pašreizējo datumu "dt" vērtībā
 dt = datetime.now()
