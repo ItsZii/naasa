@@ -1,26 +1,29 @@
 import requests
 import json
-import datetime
-import time
+import datetime #importē datumu 
+import time #importē pulksteni
 import yaml
 
 from datetime import datetime
 print('Asteroid processing service')
 
-# Initiating and reading config values
+#Izprintē, ka tiek ielādēta konfigurācija no faila
 print('Loading configuration from file')
 
-# 
+# Tiek izveidotas divas vērtības, lai saīsinātu koda apjomu. 1. ir NASA api atslēga, otrā ir mājaslapas pirmā daļa, kura ņems pretī api atslēgu 
 nasa_api_key = "i3iLGpTXE9yD0UAzSY9qpqDKWbce0Cf6HpWV9UJH"
 nasa_api_url = "https://api.nasa.gov/neo/"
 
-# Getting todays date
+#ievieto pašreizējo datumu "dt" vērtībā
 dt = datetime.now()
+#pārveido iegūto info nepieciešamajā formātā
 request_date = str(dt.year) + "-" + str(dt.month).zfill(2) + "-" + str(dt.day).zfill(2)  
+#Izprintē šodienas datumu
 print("Generated today's date: " + str(request_date))
 
-
+#izprintē mājas lapas adresi, no kuras pieprasīs informāciju
 print("Request url: " + str(nasa_api_url + "rest/v1/feed?start_date=" + request_date + "&end_date=" + request_date + "&api_key=" + nasa_api_key))
+#Veic pieprasījumu un saglabā to konstruktorā
 r = requests.get(nasa_api_url + "rest/v1/feed?start_date=" + request_date + "&end_date=" + request_date + "&api_key=" + nasa_api_key)
 
 print("Response status code: " + str(r.status_code))
