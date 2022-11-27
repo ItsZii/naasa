@@ -1,8 +1,8 @@
 import requests
 import json
 import mysql.connector
-import datetime #importē datumu 
-import time #importē pulksteni
+import datetime
+import time
 import yaml
 import logging
 import logging.config
@@ -11,13 +11,13 @@ from configparser import ConfigParser
 from datetime import datetime
 from mysql.connector import Error
 
-# Loading logging configuration
+#Ielādē ārējo loggošanas konfigu
 with open('./log_worker.yaml', 'r') as stream:
     log_config = yaml.safe_load(stream)
 
 logging.config.dictConfig(log_config)
 
-# Creating logger
+# Izveido loggeri
 logger = logging.getLogger('root')
 
 logger.info('Asteroid processing service')
@@ -56,7 +56,7 @@ def get_cursor():
 		connection.commit()
 	return connection.cursor()
 
-# Check if asteroid exists in db
+#Pārbauda vai asteroīds jau eksistē datu bāzē
 def mysql_check_if_ast_exists_in_db(request_day, ast_id):
 	records = []
 	cursor = get_cursor()
@@ -71,7 +71,7 @@ def mysql_check_if_ast_exists_in_db(request_day, ast_id):
 		pass
 	return records[0][0]
 
-# Asteroid value insert
+#Ievieto asteroīda datus datu bāzē
 def mysql_insert_ast_into_db(create_date, hazardous, name, url, diam_min, diam_max, ts, dt_utc, dt_local, speed, distance, ast_id):
 	cursor = get_cursor()
 	try:
@@ -82,15 +82,16 @@ def mysql_insert_ast_into_db(create_date, hazardous, name, url, diam_min, diam_m
 		logger.error( "INSERT INTO `ast_daily` (`create_date`, `hazardous`, `name`, `url`, `diam_min`, `diam_max`, `ts`, `dt_utc`, `dt_local`, `speed`, `distance`, `ast_id`) VALUES ('" + str(create_date) + "', '" + str(hazardous) + "', '" + str(name) + "', '" + str(url) + "', '" + str(diam_min) + "', '" + str(diam_max) + "', '" + str(ts) + "', '" + str(dt_utc) + "', '" + str(dt_local) + "', '" + str(speed) + "', '" + str(distance) + "', '" + str(ast_id) + "')")
 		logger.error('Problem inserting asteroid values into DB: ' + str(e))
 		pass
-
+#Iepusho datus uz datu bāzi
 def push_asteroids_arrays_to_db(request_day, ast_array, hazardous):
 	for asteroid in ast_array:
+		#Pārbauda vai dati jau ir ievadīti esošai dienai, lai atkārtoti darbinot kodu, nebūtu duplikātinfo DB
 		if mysql_check_if_ast_exists_in_db(request_day, asteroid[9]) == 0:
 			logger.debug("Asteroid NOT in db")
 			mysql_insert_ast_into_db(request_day, hazardous, asteroid[0], asteroid[1], asteroid[2], asteroid[3], asteroid[4], asteroid[5], asteroid[6], asteroid[7], asteroid[8], asteroid[9])
 		else:
 			logger.debug("Asteroid already IN DB")
-
+#Nodefinēta vieta, kur sākās cikls / main loop
 if __name__ == "__main__":
 
 	connection = None
@@ -98,7 +99,7 @@ if __name__ == "__main__":
 
 	init_db()
 
-	# Opening connection to mysql DB
+	# Atver pieslēgumu uz mysql datu bāzi
 	logger.info('Connecting to MySQL DB')
 	try:
 		# connection = mysql.connector.connect(host=mysql_config_mysql_host, database=mysql_config_mysql_db, user=mysql_config_mysql_user, password=mysql_config_mysql_pass)
@@ -113,8 +114,7 @@ if __name__ == "__main__":
 			connection.commit()
 	except Error as e :
 		logger.error('Error while connecting to MySQL' + str(e))
-	
-	#ievieto pašreizējo datumu "dt" vērtībā
+
 	dt = datetime.now()
 	#pārveido iegūto info nepieciešamajā formātā
 	request_date = str(dt.year) + "-" + str(dt.month).zfill(2) + "-" + str(dt.day).zfill(2)  
@@ -130,6 +130,7 @@ if __name__ == "__main__":
 	logger.debug("Response headers: " + str(r.headers))
 	logger.debug("Response content: " + str(r.text))
 	
+	#Apstrādā iegūtos datus un piešķir tā vērtības mainīgajiem
 	if r.status_code == 200:
 
 		json_data = json.loads(r.text)
@@ -146,7 +147,7 @@ if __name__ == "__main__":
 					if 'name' and 'nasa_jpl_url' and 'estimated_diameter' and 'is_potentially_hazardous_asteroid' and 'close_approach_data' in val:
 						tmp_ast_name = val['name']
 						tmp_ast_nasa_jpl_url = val['nasa_jpl_url']
-						# Getting id of asteroid
+						#Iegūst asteroīda id
 						tmp_ast_id = val['id']
 						if 'kilometers' in val['estimated_diameter']:
 							if 'estimated_diameter_min' and 'estimated_diameter_max' in val['estimated_diameter']['kilometers']:
@@ -180,6 +181,7 @@ if __name__ == "__main__":
 								tmp_ast_close_appr_ts = -1
 								tmp_ast_close_appr_dt_utc = "1969-12-31 23:59:59"
 								tmp_ast_close_appr_dt = "1969-12-31 23:59:59"
+						#Ievieto default datus gadījumā, ja  nav neviena asteroīda
 						else:
 							logger.warning("No close approach data in message")
 							tmp_ast_close_appr_ts = 0
@@ -193,7 +195,7 @@ if __name__ == "__main__":
 						logger.info("Close approach TS: " + str(tmp_ast_close_appr_ts) + " | Date/time UTC TZ: " + str(tmp_ast_close_appr_dt_utc) + " | Local TZ: " + str(tmp_ast_close_appr_dt))
 						logger.info("Speed: " + str(tmp_ast_speed) + " km/h" + " | MISS distance: " + str(tmp_ast_miss_dist) + " km")
 						
-						# Adding asteroid data to the corresponding array
+						#Pievieno asteroīda datus array balstoties uz to vai bīstama vai nē
 						if tmp_ast_hazardous == True:
 							ast_hazardous.append([tmp_ast_name, tmp_ast_nasa_jpl_url, tmp_ast_diam_min, tmp_ast_diam_max, tmp_ast_close_appr_ts, tmp_ast_close_appr_dt_utc, tmp_ast_close_appr_dt, tmp_ast_speed, tmp_ast_miss_dist, tmp_ast_id])
 						else:
