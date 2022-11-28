@@ -5,6 +5,10 @@ import mysql.connector
 from worker_2_db import *
 from configparser import ConfigParser
 
+# Opening the configuration file
+config = ConfigParser()
+config.read('config.ini')
+
 # Checking if all MYSQL related config options are present in the config file
 print("Checking if config has MYSQL related options -->")
 assert config.has_option('mysql_config', 'mysql_host') == True
