@@ -37,19 +37,14 @@ if [ $? -eq 0 ]; then echo "OK"; else echo "Problem getting python3 exec locatio
 echo "$python_exec_loc"
 echo "------------------------------------------------"
 
-echo "Running config tests"
-$python_exec_loc test_config.py
-if [ $? -eq 0 ]; then echo "OK"; else echo "Configuration test FAILED"; exit 1; fi
-echo "------------------------------------------------"
-
 echo "Running DB migrations"
 $python_exec_loc migrate_db.py
 if [ $? -eq 0 ]; then echo "OK"; else echo "DB migration FAILED"; exit 1; fi
 echo "------------------------------------------------"
 
-echo "Running asteroid worker tests"
-$python_exec_loc test_worker.py
-if [ $? -eq 0 ]; then echo "OK"; else echo "Worker test FAILED"; exit 1; fi
+echo "Running project tests"
+$python_exec_loc test_project.py
+if [ $? -eq 0 ]; then echo "OK"; else echo "Project test FAILED"; exit 1; fi
 echo "------------------------------------------------"
 
 
