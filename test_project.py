@@ -15,6 +15,10 @@ assert os.path.isfile("config.ini") == True
 print("OK")
 print("----------")
 
+# Opening the configuration file
+config = ConfigParser()
+config.read('config.ini')
+
 # Checking if all nasa related config options are present in the config file
 print("Checking if config has NASA related options -->")
 assert config.has_option('nasa', 'api_key') == True
